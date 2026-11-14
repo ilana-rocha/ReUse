@@ -1,0 +1,15 @@
+{
+  "clientes": [
+    {"nome": "Ana Souza", "email": "ana@email.com", "telefone": "11987654321", "cidade": "São Paulo"},
+    {"nome": "Bruno Lima", "email": "bruno@email.com", "telefone": "21912345678", "cidade": "Rio de Janeiro"}
+  ],
+  "produtos": [
+    {"nome": "Jaqueta jeans oversized", "marca": "Levi's", "categoria": "Casacos", "tamanho": "M", "condicao": "Ótimo estado", "preco_centavos": 12990, "estoque": 1},
+    {"nome": "Vestido floral midi", "marca": "Farm", "categoria": "Vestidos", "tamanho": "P", "condicao": "Bom estado", "preco_centavos": 8900, "estoque": 1},
+    {"nome": "Camiseta banda vintage", "marca": null, "categoria": "Camisetas", "tamanho": "G", "condicao": "Com pequenos detalhes", "preco_centavos": 4500, "estoque": 1},
+    {"nome": "Calça de alfaiataria", "marca": "Zara", "categoria": "Calças", "tamanho": "40", "condicao": "Novo com etiqueta", "preco_centavos": 11000, "estoque": 1},
+    {"nome": "Tênis branco clássico", "marca": "Adidas", "categoria": "Calçados", "tamanho": "38", "condicao": "Bom estado", "preco_centavos": 15000, "estoque": 1},
+    {"nome": "Bolsa de couro caramelo", "marca": null, "categoria": "Acessórios", "tamanho": "Único", "condicao": "Ótimo estado", "preco_centavos": 9500, "estoque": 1},
+    {"nome": "Camiseta básica branca", "marca": "Hering", "categoria": "Camisetas", "tamanho": "M", "condicao": "Ótimo estado", "preco_centavos": 2500, "estoque": 4}
+  ]
+}
