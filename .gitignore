@@ -1,0 +1,14 @@
+# Cache do Python
+__pycache__/
+*.pyc
+
+# Dados "vivos" gerados ao usar o sistema (o seed.json, de exemplo, vai pro git)
+dados/reuse.json
+dados/*.tmp
+
+# Ambiente virtual e arquivos de editor
+.venv/
+venv/
+.vscode/
+.idea/
+.DS_Store
