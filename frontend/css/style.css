@@ -1,0 +1,423 @@
+/*
+  style.css — Tema ReUse (brechó): verde-sálvia, creme e terracota.
+  As cores ficam em variáveis (:root) para trocar o tema mexendo só aqui.
+*/
+
+:root {
+  --tinta: #5f7a61;          /* verde-sálvia (menu) */
+  --tinta-clara: #44604a;
+  --papel: #faf6ee;          /* creme (fundo) */
+  --superficie: #ffffff;
+  --linha: #e8e0d0;
+  --texto: #38342d;
+  --texto-suave: #7d7667;
+
+  --destaque: #c7714f;       /* terracota (botão principal) */
+  --destaque-hover: #b0603f;
+
+  --verde: #3f7a52;
+  --verde-fundo: #e1f0e5;
+
+  --vermelho: #b5503f;
+  --vermelho-fundo: #f8e3de;
+
+  --azul: #5d7d9a;
+  --azul-fundo: #e6eef5;
+
+  --cinza: #7d7667;
+  --cinza-fundo: #eeeae0;
+
+  --serifa: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ---------- Configuração geral ---------- */
+
+* { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--texto);
+  background: var(--papel);
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+/* ---------- Menu lateral ---------- */
+
+.menu {
+  background: var(--tinta);
+  color: #fff;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.marca {
+  font: 600 2rem/1.1 var(--serifa);
+  margin: 0;
+}
+
+.marca span { color: #f3c9a8; }
+
+.marca small {
+  display: block;
+  font: 400 .8rem var(--sans);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #dfe9df;
+  margin: 4px 0 0;
+}
+
+.menu nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aba {
+  text-align: left;
+  font: inherit;
+  color: #eaf1ea;
+  background: none;
+  border: 0;
+  border-left: 4px solid transparent;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 0 8px 8px 0;
+  transition: .2s;
+}
+
+.aba:hover {
+  background: rgba(255,255,255,.13);
+  color: #fff;
+}
+
+.aba.ativa {
+  border-left-color: #f3c9a8;
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  font-weight: 600;
+}
+
+.resumo {
+  margin: auto 0 0;
+  display: grid;
+  gap: 14px;
+}
+
+.resumo div {
+  border-top: 1px solid rgba(255,255,255,.22);
+  padding-top: 10px;
+}
+
+.resumo dt {
+  font-size: .85rem;
+  color: #dfe9df;
+}
+
+.resumo dd {
+  margin: 2px 0 0;
+  font: 600 1.7rem var(--serifa);
+}
+
+/* ---------- Conteúdo principal ---------- */
+
+main {
+  padding: 32px clamp(16px, 4vw, 48px);
+  min-width: 0;
+}
+
+.topo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font: 600 1.9rem var(--serifa);
+  margin: 0;
+  color: var(--tinta-clara);
+}
+
+.ferramentas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ---------- Tabelas ---------- */
+
+.tabela-area {
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: 12px;
+  overflow-x: auto;
+  box-shadow: 0 3px 12px rgba(80,70,40,.06);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--linha);
+  vertical-align: middle;
+}
+
+th {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--tinta-clara);
+  background: #f4f0e4;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody tr:hover {
+  background: #fdfaf3;
+}
+
+.vazio {
+  text-align: center;
+  color: var(--texto-suave);
+  padding: 36px 14px;
+}
+
+.acoes-linha {
+  text-align: right;
+  white-space: nowrap;
+}
+
+small {
+  color: var(--texto-suave);
+  margin-left: 6px;
+}
+
+/* ---------- Etiquetas de situação ---------- */
+
+.etiqueta {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.etiqueta.sim,
+.etiqueta.pago {
+  background: var(--verde-fundo);
+  color: var(--verde);
+}
+
+.etiqueta.nao,
+.etiqueta.vencido {
+  background: var(--vermelho-fundo);
+  color: var(--vermelho);
+}
+
+.etiqueta.pendente {
+  background: var(--azul-fundo);
+  color: var(--azul);
+}
+
+.etiqueta.cancelado {
+  background: var(--cinza-fundo);
+  color: var(--cinza);
+}
+
+/* ---------- Botões e campos ---------- */
+
+.botao {
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--linha);
+  background: var(--superficie);
+  color: var(--texto);
+  transition: .2s;
+}
+
+.botao:hover {
+  border-color: var(--tinta);
+  background: #f7f3e8;
+}
+
+.botao.primario {
+  background: var(--destaque);
+  border-color: var(--destaque);
+  color: #fff;
+}
+
+.botao.primario:hover {
+  background: var(--destaque-hover);
+  border-color: var(--destaque-hover);
+}
+
+.botao.perigo {
+  color: var(--vermelho);
+}
+
+.botao.pequeno {
+  padding: 5px 10px;
+  font-size: .85rem;
+}
+
+input, select {
+  font: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  padding: 9px 12px;
+}
+
+input:focus, select:focus {
+  border-color: var(--destaque);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(199,113,79,.18);
+}
+
+input[type="search"] {
+  min-width: min(300px, 100%);
+}
+
+:focus-visible {
+  outline: 3px solid var(--destaque);
+  outline-offset: 2px;
+}
+
+/* ---------- Avisos ---------- */
+
+.aviso {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 20;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  max-width: 360px;
+  box-shadow: 0 4px 16px rgba(50,40,20,.18);
+}
+
+.aviso.ok {
+  background: var(--verde-fundo);
+  color: var(--verde);
+  border: 1px solid var(--verde);
+}
+
+.aviso.erro {
+  background: var(--vermelho-fundo);
+  color: var(--vermelho);
+  border: 1px solid var(--vermelho);
+}
+
+/* ---------- Diálogos ---------- */
+
+dialog {
+  border: 1px solid var(--linha);
+  border-radius: 14px;
+  padding: 24px;
+  width: min(480px, 92vw);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 10px 40px rgba(50,40,20,.18);
+}
+
+dialog::backdrop {
+  background: rgba(56,52,45,.45);
+}
+
+dialog h3 {
+  font: 600 1.4rem var(--serifa);
+  margin: 0 0 16px;
+  color: var(--tinta-clara);
+}
+
+dialog form {
+  display: grid;
+  gap: 14px;
+}
+
+dialog label {
+  display: grid;
+  gap: 5px;
+  font-size: .9rem;
+  color: var(--texto-suave);
+}
+
+dialog input,
+dialog select {
+  width: 100%;
+}
+
+.duas-colunas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* ---------- Telas pequenas ---------- */
+
+@media (max-width: 800px) {
+  body {
+    grid-template-columns: 1fr;
+  }
+
+  .menu {
+    position: static;
+    height: auto;
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .menu nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .aba {
+    border-left: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 6px 6px 0 0;
+  }
+
+  .aba.ativa {
+    border-bottom-color: #f3c9a8;
+  }
+
+  .resumo {
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0;
+  }
+
+  .resumo dd {
+    font-size: 1.2rem;
+  }
+}

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<!--
+  PÁGINA ÚNICA (SPA simples): as três "telas" (Produtos, Clientes, Pedidos)
+  ficam no mesmo HTML e o JavaScript só mostra uma de cada vez.
+  Nada aqui é preenchido com dados: as tabelas começam vazias e o JavaScript
+  as preenche com o que a API (Flask) devolve — por isso o <tbody> está vazio.
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport: faz o layout se adaptar a telas de celular -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReUse — Brechó online</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ===== Menu lateral: navegação entre as telas + resumo da loja ===== -->
+  <aside class="menu">
+    <h1 class="marca">Re<span>Use</span><small>brechó online</small></h1>
+
+    <!-- data-aba diz qual <section> o botão abre (lido em app.js) -->
+    <nav aria-label="Seções">
+      <button class="aba ativa" data-aba="produtos">Produtos</button>
+      <button class="aba" data-aba="clientes">Clientes</button>
+      <button class="aba" data-aba="pedidos">Pedidos</button>
+    </nav>
+
+    <!-- Resumo: os números são calculados em app.js a partir da API -->
+    <dl class="resumo">
+      <div><dt>Peças em estoque</dt><dd id="resumo-estoque">–</dd></div>
+      <div><dt>Pedidos pendentes</dt><dd id="resumo-pendentes">–</dd></div>
+      <div><dt>Faturamento</dt><dd id="resumo-faturamento">–</dd></div>
+    </dl>
+  </aside>
+
+  <main>
+    <!-- Área de avisos (sucesso/erro). aria-live faz leitores de tela anunciarem. -->
+    <div id="aviso" class="aviso" role="status" aria-live="polite" hidden></div>
+
+    <!-- ================= PRODUTOS ================= -->
+    <section id="aba-produtos" class="tela">
+      <header class="topo">
+        <h2>Produtos</h2>
+        <div class="ferramentas">
+          <input type="search" id="busca-produtos" placeholder="Buscar por nome, marca ou categoria">
+          <!-- as <option> de categoria são criadas pelo JavaScript (vêm da API) -->
+          <select id="filtro-categoria" aria-label="Filtrar por categoria">
+            <option value="">Todas as categorias</option>
+          </select>
+          <button class="botao primario" id="novo-produto">Cadastrar produto</button>
+        </div>
+      </header>
+      <div class="tabela-area">
+        <table>
+          <thead>
+            <tr><th>Peça</th><th>Categoria</th><th>Tam.</th><th>Condição</th><th>Preço</th><th>Estoque</th><th></th></tr>
+          </thead>
+          <tbody id="tabela-produtos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= CLIENTES ================= -->
+    <section id="aba-clientes" class="tela" hidden>
+      <header class="topo">
+        <h2>Clientes</h2>
+        <div class="ferramentas">
+          <input type="search" id="busca-clientes" placeholder="Buscar por nome, e-mail ou cidade">
+          <button class="botao primario" id="novo-cliente">Cadastrar cliente</button>
+        </div>
+      </header>
+      <div class="tabela-area">
+        <table>
+          <thead>
+            <tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Cidade</th><th></th></tr>
+          </thead>
+          <tbody id="tabela-clientes"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= PEDIDOS ================= -->
+    <section id="aba-pedidos" class="tela" hidden>
+      <header class="topo">
+        <h2>Pedidos</h2>
+        <div class="ferramentas">
+          <select id="filtro-status" aria-label="Filtrar por situação">
+            <option value="">Todos</option>
+            <option value="pendentes">Pendentes</option>
+            <option value="vencidos">Vencidos</option>
+            <option value="pagos">Pagos</option>
+            <option value="cancelados">Cancelados</option>
+          </select>
+          <button class="botao primario" id="novo-pedido">Fazer pedido</button>
+        </div>
+      </header>
+      <div class="tabela-area">
+        <table>
+          <thead>
+            <tr><th>Peça</th><th>Cliente</th><th>Qtd.</th><th>Total</th><th>Pagar até</th><th>Situação</th><th></th></tr>
+          </thead>
+          <tbody id="tabela-pedidos"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!--
+    <dialog> é um elemento HTML nativo para janelas modais: showModal() abre
+    com fundo escurecido e close() fecha — sem biblioteca nenhuma.
+    Cada formulário tem um campo oculto "id": vazio = cadastrar (POST),
+    preenchido = editar (PUT).
+  -->
+  <dialog id="dialogo-produto">
+    <form id="form-produto">
+      <h3 id="titulo-dialogo-produto">Cadastrar produto</h3>
+      <input type="hidden" name="id">
+      <label>Nome da peça <input name="nome" required></label>
+      <div class="duas-colunas">
+        <label>Marca (opcional) <input name="marca"></label>
+        <label>Categoria <select name="categoria" required></select></label>
+      </div>
+      <div class="duas-colunas">
+        <label>Tamanho <input name="tamanho" required placeholder="P, M, 38, Único"></label>
+        <label>Condição <select name="condicao" required></select></label>
+      </div>
+      <div class="duas-colunas">
+        <!-- step="0.01" permite centavos; a API converte para inteiro -->
+        <label>Preço (R$) <input name="preco" type="number" min="0.01" step="0.01" required></label>
+        <label>Estoque <input name="estoque" type="number" min="0" value="1" required></label>
+      </div>
+      <div class="acoes">
+        <button type="button" class="botao" data-fechar>Cancelar</button>
+        <button type="submit" class="botao primario">Salvar produto</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dialogo-cliente">
+    <form id="form-cliente">
+      <h3 id="titulo-dialogo-cliente">Cadastrar cliente</h3>
+      <input type="hidden" name="id">
+      <label>Nome <input name="nome" required></label>
+      <label>E-mail <input name="email" type="email" required></label>
+      <div class="duas-colunas">
+        <label>Telefone <input name="telefone" required inputmode="tel" placeholder="(11) 98765-4321"></label>
+        <label>Cidade <input name="cidade" required></label>
+      </div>
+      <div class="acoes">
+        <button type="button" class="botao" data-fechar>Cancelar</button>
+        <button type="submit" class="botao primario">Salvar cliente</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dialogo-pedido">
+    <form id="form-pedido">
+      <h3>Fazer pedido</h3>
+      <!-- As <option> destes selects são criadas por JavaScript com dados da API -->
+      <label>Cliente <select name="cliente_id" required></select></label>
+      <label>Peça (só aparecem as disponíveis) <select name="produto_id" required></select></label>
+      <div class="duas-colunas">
+        <label>Quantidade <input name="quantidade" type="number" min="1" value="1" required></label>
+        <label>Prazo para pagar (dias) <input name="dias" type="number" min="1" max="15" value="2" required></label>
+      </div>
+      <div class="acoes">
+        <button type="button" class="botao" data-fechar>Cancelar</button>
+        <button type="submit" class="botao primario">Fazer pedido</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!--
+    Ordem dos scripts IMPORTA: scripts comuns compartilham o mesmo escopo
+    global, então api.js e ui.js precisam vir antes de quem os usa.
+  -->
+  <script src="js/api.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/produtos.js"></script>
+  <script src="js/clientes.js"></script>
+  <script src="js/pedidos.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
