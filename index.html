@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<!--
+  VERSÃO PARA GITHUB PAGES (js/api.js simula o servidor com localStorage).
+  PÁGINA ÚNICA (SPA simples): as três "telas" (Produtos, Clientes, Pedidos)
+  ficam no mesmo HTML e o JavaScript só mostra uma de cada vez.
+  Nada aqui é preenchido com dados: as tabelas começam vazias e o JavaScript
+  as preenche com o que a API (Flask) devolve — por isso o <tbody> está vazio.
+-->
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <!-- viewport: faz o layout se adaptar a telas de celular -->
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ReUse — Brechó online</title>
+  <style>
+/*
+  style.css — Tema ReUse (brechó): verde-sálvia, creme e terracota.
+  As cores ficam em variáveis (:root) para trocar o tema mexendo só aqui.
+*/
+
+:root {
+  --tinta: #5f7a61;          /* verde-sálvia (menu) */
+  --tinta-clara: #44604a;
+  --papel: #faf6ee;          /* creme (fundo) */
+  --superficie: #ffffff;
+  --linha: #e8e0d0;
+  --texto: #38342d;
+  --texto-suave: #7d7667;
+
+  --destaque: #c7714f;       /* terracota (botão principal) */
+  --destaque-hover: #b0603f;
+
+  --verde: #3f7a52;
+  --verde-fundo: #e1f0e5;
+
+  --vermelho: #b5503f;
+  --vermelho-fundo: #f8e3de;
+
+  --azul: #5d7d9a;
+  --azul-fundo: #e6eef5;
+
+  --cinza: #7d7667;
+  --cinza-fundo: #eeeae0;
+
+  --serifa: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ---------- Configuração geral ---------- */
+
+* { box-sizing: border-box; }
+
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  color: var(--texto);
+  background: var(--papel);
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  min-height: 100vh;
+}
+
+/* ---------- Menu lateral ---------- */
+
+.menu {
+  background: var(--tinta);
+  color: #fff;
+  padding: 28px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+}
+
+.marca {
+  font: 600 2rem/1.1 var(--serifa);
+  margin: 0;
+}
+
+.marca span { color: #f3c9a8; }
+
+.marca small {
+  display: block;
+  font: 400 .8rem var(--sans);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #dfe9df;
+  margin: 4px 0 0;
+}
+
+.menu nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.aba {
+  text-align: left;
+  font: inherit;
+  color: #eaf1ea;
+  background: none;
+  border: 0;
+  border-left: 4px solid transparent;
+  padding: 10px 12px;
+  cursor: pointer;
+  border-radius: 0 8px 8px 0;
+  transition: .2s;
+}
+
+.aba:hover {
+  background: rgba(255,255,255,.13);
+  color: #fff;
+}
+
+.aba.ativa {
+  border-left-color: #f3c9a8;
+  background: rgba(255,255,255,.18);
+  color: #fff;
+  font-weight: 600;
+}
+
+.resumo {
+  margin: auto 0 0;
+  display: grid;
+  gap: 14px;
+}
+
+.resumo div {
+  border-top: 1px solid rgba(255,255,255,.22);
+  padding-top: 10px;
+}
+
+.resumo dt {
+  font-size: .85rem;
+  color: #dfe9df;
+}
+
+.resumo dd {
+  margin: 2px 0 0;
+  font: 600 1.7rem var(--serifa);
+}
+
+/* ---------- Conteúdo principal ---------- */
+
+main {
+  padding: 32px clamp(16px, 4vw, 48px);
+  min-width: 0;
+}
+
+.topo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+h2 {
+  font: 600 1.9rem var(--serifa);
+  margin: 0;
+  color: var(--tinta-clara);
+}
+
+.ferramentas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+/* ---------- Tabelas ---------- */
+
+.tabela-area {
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: 12px;
+  overflow-x: auto;
+  box-shadow: 0 3px 12px rgba(80,70,40,.06);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th, td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid var(--linha);
+  vertical-align: middle;
+}
+
+th {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--tinta-clara);
+  background: #f4f0e4;
+}
+
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+tbody tr:hover {
+  background: #fdfaf3;
+}
+
+.vazio {
+  text-align: center;
+  color: var(--texto-suave);
+  padding: 36px 14px;
+}
+
+.acoes-linha {
+  text-align: right;
+  white-space: nowrap;
+}
+
+small {
+  color: var(--texto-suave);
+  margin-left: 6px;
+}
+
+/* ---------- Etiquetas de situação ---------- */
+
+.etiqueta {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: .82rem;
+  font-weight: 600;
+}
+
+.etiqueta.sim,
+.etiqueta.pago {
+  background: var(--verde-fundo);
+  color: var(--verde);
+}
+
+.etiqueta.nao,
+.etiqueta.vencido {
+  background: var(--vermelho-fundo);
+  color: var(--vermelho);
+}
+
+.etiqueta.pendente {
+  background: var(--azul-fundo);
+  color: var(--azul);
+}
+
+.etiqueta.cancelado {
+  background: var(--cinza-fundo);
+  color: var(--cinza);
+}
+
+/* ---------- Botões e campos ---------- */
+
+.botao {
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 9px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--linha);
+  background: var(--superficie);
+  color: var(--texto);
+  transition: .2s;
+}
+
+.botao:hover {
+  border-color: var(--tinta);
+  background: #f7f3e8;
+}
+
+.botao.primario {
+  background: var(--destaque);
+  border-color: var(--destaque);
+  color: #fff;
+}
+
+.botao.primario:hover {
+  background: var(--destaque-hover);
+  border-color: var(--destaque-hover);
+}
+
+.botao.perigo {
+  color: var(--vermelho);
+}
+
+.botao.pequeno {
+  padding: 5px 10px;
+  font-size: .85rem;
+}
+
+input, select {
+  font: inherit;
+  color: var(--texto);
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: 8px;
+  padding: 9px 12px;
+}
+
+input:focus, select:focus {
+  border-color: var(--destaque);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(199,113,79,.18);
+}
+
+input[type="search"] {
+  min-width: min(300px, 100%);
+}
+
+:focus-visible {
+  outline: 3px solid var(--destaque);
+  outline-offset: 2px;
+}
+
+/* ---------- Avisos ---------- */
+
+.aviso {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 20;
+  padding: 12px 18px;
+  border-radius: 10px;
+  font-weight: 600;
+  max-width: 360px;
+  box-shadow: 0 4px 16px rgba(50,40,20,.18);
+}
+
+.aviso.ok {
+  background: var(--verde-fundo);
+  color: var(--verde);
+  border: 1px solid var(--verde);
+}
+
+.aviso.erro {
+  background: var(--vermelho-fundo);
+  color: var(--vermelho);
+  border: 1px solid var(--vermelho);
+}
+
+/* ---------- Diálogos ---------- */
+
+dialog {
+  border: 1px solid var(--linha);
+  border-radius: 14px;
+  padding: 24px;
+  width: min(480px, 92vw);
+  background: var(--superficie);
+  color: var(--texto);
+  box-shadow: 0 10px 40px rgba(50,40,20,.18);
+}
+
+dialog::backdrop {
+  background: rgba(56,52,45,.45);
+}
+
+dialog h3 {
+  font: 600 1.4rem var(--serifa);
+  margin: 0 0 16px;
+  color: var(--tinta-clara);
+}
+
+dialog form {
+  display: grid;
+  gap: 14px;
+}
+
+dialog label {
+  display: grid;
+  gap: 5px;
+  font-size: .9rem;
+  color: var(--texto-suave);
+}
+
+dialog input,
+dialog select {
+  width: 100%;
+}
+
+.duas-colunas {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.acoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+/* ---------- Telas pequenas ---------- */
+
+@media (max-width: 800px) {
+  body {
+    grid-template-columns: 1fr;
+  }
+
+  .menu {
+    position: static;
+    height: auto;
+    padding: 16px;
+    gap: 14px;
+  }
+
+  .menu nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .aba {
+    border-left: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 6px 6px 0 0;
+  }
+
+  .aba.ativa {
+    border-bottom-color: #f3c9a8;
+  }
+
+  .resumo {
+    grid-template-columns: repeat(3, 1fr);
+    margin: 0;
+  }
+
+  .resumo dd {
+    font-size: 1.2rem;
+  }
+}
+
+/* ---------- Aviso da versão demonstração (só em docs/) ---------- */
+
+.demo {
+  margin: 0;
+  font-size: .8rem;
+  line-height: 1.4;
+  color: #dfe9df;
+}
+
+.demo .botao {
+  margin-top: 8px;
+  background: transparent;
+  color: #fff;
+  border-color: rgba(255,255,255,.4);
+}
+
+.demo .botao:hover {
+  background: rgba(255,255,255,.15);
+}
+
+</style>
+</head>
+<body>
+
+  <!-- ===== Menu lateral: navegação entre as telas + resumo da loja ===== -->
+  <aside class="menu">
+    <h1 class="marca">Re<span>Use</span><small>brechó online</small></h1>
+
+    <!-- data-aba diz qual <section> o botão abre (lido em app.js) -->
+    <nav aria-label="Seções">
+      <button class="aba ativa" data-aba="produtos">Produtos</button>
+      <button class="aba" data-aba="clientes">Clientes</button>
+      <button class="aba" data-aba="pedidos">Pedidos</button>
+    </nav>
+
+    <!-- Resumo: os números são calculados em app.js a partir da API -->
+    <!-- Aviso: esta é a versão publicada no GitHub Pages (sem servidor) -->
+    <p class="demo">Versão demonstração: os dados ficam só neste navegador.
+      <button type="button" id="restaurar" class="botao pequeno">Restaurar exemplos</button></p>
+
+    <dl class="resumo">
+      <div><dt>Peças em estoque</dt><dd id="resumo-estoque">–</dd></div>
+      <div><dt>Pedidos pendentes</dt><dd id="resumo-pendentes">–</dd></div>
+      <div><dt>Faturamento</dt><dd id="resumo-faturamento">–</dd></div>
+    </dl>
+  </aside>
+
+  <main>
+    <!-- Área de avisos (sucesso/erro). aria-live faz leitores de tela anunciarem. -->
+    <div id="aviso" class="aviso" role="status" aria-live="polite" hidden></div>
+
+    <!-- ================= PRODUTOS ================= -->
+    <section id="aba-produtos" class="tela">
+      <header class="topo">
+        <h2>Produtos</h2>
+        <div class="ferramentas">
+          <input type="search" id="busca-produtos" placeholder="Buscar por nome, marca ou categoria">
+          <!-- as <option> de categoria são criadas pelo JavaScript (vêm da API) -->
+          <select id="filtro-categoria" aria-label="Filtrar por categoria">
+            <option value="">Todas as categorias</option>
+          </select>
+          <button class="botao primario" id="novo-produto">Cadastrar produto</button>
+        </div>
+      </header>
+      <div class="tabela-area">
+        <table>
+          <thead>
+            <tr><th>Peça</th><th>Categoria</th><th>Tam.</th><th>Condição</th><th>Preço</th><th>Estoque</th><th></th></tr>
+          </thead>
+          <tbody id="tabela-produtos"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= CLIENTES ================= -->
+    <section id="aba-clientes" class="tela" hidden>
+      <header class="topo">
+        <h2>Clientes</h2>
+        <div class="ferramentas">
+          <input type="search" id="busca-clientes" placeholder="Buscar por nome, e-mail ou cidade">
+          <button class="botao primario" id="novo-cliente">Cadastrar cliente</button>
+        </div>
+      </header>
+      <div class="tabela-area">
+        <table>
+          <thead>
+            <tr><th>Nome</th><th>E-mail</th><th>Telefone</th><th>Cidade</th><th></th></tr>
+          </thead>
+          <tbody id="tabela-clientes"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================= PEDIDOS ================= -->
+    <section id="aba-pedidos" class="tela" hidden>
+      <header class="topo">
+        <h2>Pedidos</h2>
+        <div class="ferramentas">
+          <select id="filtro-status" aria-label="Filtrar por situação">
+            <option value="">Todos</option>
+            <option value="pendentes">Pendentes</option>
+            <option value="vencidos">Vencidos</option>
+            <option value="pagos">Pagos</option>
+            <option value="cancelados">Cancelados</option>
+          </select>
+          <button class="botao primario" id="novo-pedido">Fazer pedido</button>
+        </div>
+      </header>
+      <div class="tabela-area">
+        <table>
+          <thead>
+            <tr><th>Peça</th><th>Cliente</th><th>Qtd.</th><th>Total</th><th>Pagar até</th><th>Situação</th><th></th></tr>
+          </thead>
+          <tbody id="tabela-pedidos"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!--
+    <dialog> é um elemento HTML nativo para janelas modais: showModal() abre
+    com fundo escurecido e close() fecha — sem biblioteca nenhuma.
+    Cada formulário tem um campo oculto "id": vazio = cadastrar (POST),
+    preenchido = editar (PUT).
+  -->
+  <dialog id="dialogo-produto">
+    <form id="form-produto">
+      <h3 id="titulo-dialogo-produto">Cadastrar produto</h3>
+      <input type="hidden" name="id">
+      <label>Nome da peça <input name="nome" required></label>
+      <div class="duas-colunas">
+        <label>Marca (opcional) <input name="marca"></label>
+        <label>Categoria <select name="categoria" required></select></label>
+      </div>
+      <div class="duas-colunas">
+        <label>Tamanho <input name="tamanho" required placeholder="P, M, 38, Único"></label>
+        <label>Condição <select name="condicao" required></select></label>
+      </div>
+      <div class="duas-colunas">
+        <!-- step="0.01" permite centavos; a API converte para inteiro -->
+        <label>Preço (R$) <input name="preco" type="number" min="0.01" step="0.01" required></label>
+        <label>Estoque <input name="estoque" type="number" min="0" value="1" required></label>
+      </div>
+      <div class="acoes">
+        <button type="button" class="botao" data-fechar>Cancelar</button>
+        <button type="submit" class="botao primario">Salvar produto</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dialogo-cliente">
+    <form id="form-cliente">
+      <h3 id="titulo-dialogo-cliente">Cadastrar cliente</h3>
+      <input type="hidden" name="id">
+      <label>Nome <input name="nome" required></label>
+      <label>E-mail <input name="email" type="email" required></label>
+      <div class="duas-colunas">
+        <label>Telefone <input name="telefone" required inputmode="tel" placeholder="(11) 98765-4321"></label>
+        <label>Cidade <input name="cidade" required></label>
+      </div>
+      <div class="acoes">
+        <button type="button" class="botao" data-fechar>Cancelar</button>
+        <button type="submit" class="botao primario">Salvar cliente</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog id="dialogo-pedido">
+    <form id="form-pedido">
+      <h3>Fazer pedido</h3>
+      <!-- As <option> destes selects são criadas por JavaScript com dados da API -->
+      <label>Cliente <select name="cliente_id" required></select></label>
+      <label>Peça (só aparecem as disponíveis) <select name="produto_id" required></select></label>
+      <div class="duas-colunas">
+        <label>Quantidade <input name="quantidade" type="number" min="1" value="1" required></label>
+        <label>Prazo para pagar (dias) <input name="dias" type="number" min="1" max="15" value="2" required></label>
+      </div>
+      <div class="acoes">
+        <button type="button" class="botao" data-fechar>Cancelar</button>
+        <button type="submit" class="botao primario">Fazer pedido</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!--
+    Ordem dos scripts IMPORTA: scripts comuns compartilham o mesmo escopo
+    global, então api.js e ui.js precisam vir antes de quem os usa.
+  -->
+  <script>
+/* ===== js/api.js ===== */
+/*
+  api.js — VERSÃO PARA GITHUB PAGES (sem servidor).
+
+  O GitHub Pages só entrega arquivos estáticos: não executa Python. Por isso,
+  neste arquivo, o "back-end" foi reescrito em JavaScript e roda DENTRO do
+  navegador, guardando os dados no localStorage.
+
+  As telas (produtos.js, clientes.js, pedidos.js) continuam idênticas às da
+  versão com Flask: elas chamam api.produtos.listar(), api.pedidos.pagar() etc.
+  e nem sabem que não existe servidor. Este arquivo cumpre o mesmo "contrato"
+  da API real e repete as MESMAS regras de negócio do Python (backend/models
+  e backend/dao):
+
+      Python (Flask)                      JavaScript (aqui)
+      ------------------------------      -----------------------------
+      armazenamento.transacao()           transacao()
+      models/validacao.py                 funções "validar..." abaixo
+      dao/*.py + models/*.py              objeto "api" (regras de estoque)
+      raise ErroConflito(...)             throw new Error(...)
+*/
+
+const CHAVE = "reuse-db-v1";   // nome sob o qual os dados ficam no navegador
+
+const CATEGORIAS = ["Camisetas", "Calças", "Vestidos", "Casacos", "Calçados", "Acessórios", "Outros"];
+const CONDICOES = ["Novo com etiqueta", "Ótimo estado", "Bom estado", "Com pequenos detalhes"];
+
+/* ====================================================================
+   ARMAZENAMENTO (equivale ao armazenamento.py)
+   ==================================================================== */
+
+/* Dados de exemplo (equivale ao dados/seed.json). */
+function bancoInicial() {
+  const p = (nome, marca, categoria, tamanho, condicao, preco_centavos, estoque = 1) =>
+    ({ nome, marca, categoria, tamanho, condicao, preco_centavos, estoque });
+  const produtos = [
+    p("Jaqueta jeans oversized", "Levi's", "Casacos", "M", "Ótimo estado", 12990),
+    p("Vestido floral midi", "Farm", "Vestidos", "P", "Bom estado", 8900),
+    p("Camiseta banda vintage", null, "Camisetas", "G", "Com pequenos detalhes", 4500),
+    p("Calça de alfaiataria", "Zara", "Calças", "40", "Novo com etiqueta", 11000),
+    p("Tênis branco clássico", "Adidas", "Calçados", "38", "Bom estado", 15000),
+    p("Bolsa de couro caramelo", null, "Acessórios", "Único", "Ótimo estado", 9500),
+    p("Camiseta básica branca", "Hering", "Camisetas", "M", "Ótimo estado", 2500, 4),
+  ].map((x, i) => ({ id: i + 1, ...x }));
+  const clientes = [
+    { id: 1, nome: "Ana Souza", email: "ana@email.com", telefone: "11987654321", cidade: "São Paulo" },
+    { id: 2, nome: "Bruno Lima", email: "bruno@email.com", telefone: "21912345678", cidade: "Rio de Janeiro" },
+  ];
+  // "ids" guarda o último id usado em cada tabela (o AUTOINCREMENT)
+  return { ids: { clientes: 2, produtos: produtos.length, pedidos: 0 }, clientes, produtos, pedidos: [] };
+}
+
+/*
+  localStorage pode estar bloqueado (aba anônima, política do navegador).
+  Nesse caso guardamos na memória: o site funciona, mas perde tudo ao recarregar.
+*/
+let bancoEmMemoria = null;
+
+function lerBanco() {
+  try {
+    const texto = localStorage.getItem(CHAVE);
+    if (texto) return JSON.parse(texto);
+  } catch (e) { /* cai para a memória */ }
+  return bancoEmMemoria ? JSON.parse(JSON.stringify(bancoEmMemoria)) : bancoInicial();
+}
+
+function gravarBanco(dados) {
+  bancoEmMemoria = JSON.parse(JSON.stringify(dados));
+  try { localStorage.setItem(CHAVE, JSON.stringify(dados)); } catch (e) { /* só memória */ }
+}
+
+function restaurarDadosDeExemplo() {
+  gravarBanco(bancoInicial());
+}
+
+/*
+  TRANSAÇÃO: carrega os dados, deixa a função alterar a CÓPIA em memória e só
+  grava no final se nada lançou erro. Se um "throw" acontecer no meio, a
+  gravação nunca é executada: nada muda (rollback). Igual ao transacao() do Python.
+*/
+function transacao(funcao) {
+  const db = lerBanco();
+  const resultado = funcao(db);   // se lançar erro, sai daqui sem gravar
+  gravarBanco(db);
+  return resultado;
+}
+
+function leitura(funcao) {
+  return funcao(lerBanco());
+}
+
+function novoId(db, tabela) {
+  db.ids[tabela] += 1;            // nunca reaproveita ids de registros excluídos
+  return db.ids[tabela];
+}
+
+/* ====================================================================
+   VALIDAÇÃO (equivale ao models/validacao.py)
+   ==================================================================== */
+
+function textoObrigatorio(valor, campo) {
+  if (typeof valor !== "string" || !valor.trim()) throw new Error(`O campo '${campo}' é obrigatório.`);
+  return valor.trim();
+}
+
+function textoOpcional(valor) {
+  return typeof valor === "string" && valor.trim() ? valor.trim() : null;
+}
+
+function escolha(valor, campo, opcoes) {
+  valor = textoObrigatorio(valor, campo);
+  if (!opcoes.includes(valor)) throw new Error(`O campo '${campo}' deve ser um de: ${opcoes.join(", ")}.`);
+  return valor;
+}
+
+function inteiro(valor, campo, minimo) {
+  if (valor === null || valor === undefined || valor === "") throw new Error(`O campo '${campo}' é obrigatório.`);
+  const n = Number(valor);
+  if (typeof valor === "boolean" || !Number.isInteger(n)) throw new Error(`O campo '${campo}' deve ser um número inteiro.`);
+  if (minimo !== undefined && n < minimo) throw new Error(`O campo '${campo}' deve ser no mínimo ${minimo}.`);
+  return n;
+}
+
+/*
+  Dinheiro nunca é guardado como número quebrado: convertemos para CENTAVOS
+  (inteiro). Math.round evita o erro clássico de 0.1 + 0.2 em ponto flutuante.
+*/
+function precoEmCentavos(valor, campo) {
+  if (valor === null || valor === undefined || valor === "" || typeof valor === "boolean")
+    throw new Error(`O campo '${campo}' é obrigatório.`);
+  const n = Number(String(valor).replace(",", "."));
+  if (!Number.isFinite(n)) throw new Error(`O campo '${campo}' deve ser um valor em reais.`);
+  if (n <= 0) throw new Error(`O campo '${campo}' deve ser maior que zero.`);
+  if (n > 100000) throw new Error(`O campo '${campo}' é alto demais.`);
+  return Math.round(n * 100);
+}
+
+function validarTelefone(valor) {
+  const digitos = textoObrigatorio(valor, "telefone").replace(/\D/g, "");
+  if (digitos.length !== 10 && digitos.length !== 11)
+    throw new Error("O telefone deve ter DDD + número (10 ou 11 dígitos).");
+  return digitos;
+}
+
+const REGEX_EMAIL = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+/* Cada função abaixo valida os dados vindos do formulário e devolve o registro limpo. */
+function validarCliente(d) {
+  const email = textoObrigatorio(d.email, "email").toLowerCase();
+  const registro = {
+    nome: textoObrigatorio(d.nome, "nome"),
+    email,
+    telefone: validarTelefone(d.telefone),
+    cidade: textoObrigatorio(d.cidade, "cidade"),
+  };
+  if (!REGEX_EMAIL.test(email)) throw new Error("O e-mail informado é inválido.");
+  return registro;
+}
+
+function validarProduto(d) {
+  return {
+    nome: textoObrigatorio(d.nome, "nome"),
+    marca: textoOpcional(d.marca),
+    categoria: escolha(d.categoria, "categoria", CATEGORIAS),
+    tamanho: textoObrigatorio(d.tamanho, "tamanho"),
+    condicao: escolha(d.condicao, "condicao", CONDICOES),
+    preco_centavos: precoEmCentavos(d.preco, "preco"),
+    estoque: inteiro(d.estoque ?? 1, "estoque", 0),
+  };
+}
+
+/* ====================================================================
+   FORMATOS DE SAÍDA (equivalem aos to_dict() dos models)
+   ==================================================================== */
+
+const paraProduto = (r) => ({
+  id: r.id, nome: r.nome, marca: r.marca, categoria: r.categoria, tamanho: r.tamanho,
+  condicao: r.condicao, preco: r.preco_centavos / 100, estoque: r.estoque, disponivel: r.estoque > 0,
+});
+
+/* "Hoje" no fuso do usuário, no formato AAAA-MM-DD (toISOString usaria UTC e erraria a data à noite). */
+function hojeISO(maisDias = 0) {
+  const d = new Date();
+  d.setDate(d.getDate() + maisDias);
+  const dois = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${dois(d.getMonth() + 1)}-${dois(d.getDate())}`;
+}
+
+/*
+  Status do pedido. A ORDEM dos if importa: cancelado nunca aparece como
+  vencido. Comparar textos AAAA-MM-DD funciona porque a ordem alfabética é
+  igual à cronológica nesse formato.
+*/
+function statusDoPedido(r) {
+  if (r.data_cancelamento) return "cancelado";
+  if (r.data_pagamento) return "pago";
+  return hojeISO() > r.data_limite ? "vencido" : "pendente";
+}
+
+/* Faz o papel do JOIN: junta o pedido ao nome do cliente e da peça. */
+function paraPedido(db, r) {
+  const cliente = db.clientes.find((c) => c.id === r.cliente_id);
+  const produto = db.produtos.find((p) => p.id === r.produto_id);
+  return {
+    id: r.id, cliente_id: r.cliente_id, produto_id: r.produto_id, quantidade: r.quantidade,
+    data_pedido: r.data_pedido, data_limite: r.data_limite,
+    data_pagamento: r.data_pagamento, data_cancelamento: r.data_cancelamento,
+    valor_total: r.valor_total_centavos / 100,
+    cliente_nome: cliente ? cliente.nome : null,
+    produto_nome: produto ? produto.nome : null,
+    status: statusDoPedido(r),
+  };
+}
+
+const STATUS_FILTRO = {
+  pendentes: ["pendente", "vencido"],   // pendentes inclui os vencidos
+  vencidos: ["vencido"],
+  pagos: ["pago"],
+  cancelados: ["cancelado"],
+};
+
+const contem = (texto, busca) => String(texto ?? "").toLowerCase().includes(busca.toLowerCase());
+const porNome = (a, b) => a.nome.localeCompare(b.nome, "pt-BR");
+
+/* ====================================================================
+   A "API" (mesma forma da versão com Flask; todas devolvem Promise)
+   ==================================================================== */
+
+const api = {
+  produtos: {
+    listar: async (busca = "", categoria = "") => leitura((db) =>
+      db.produtos
+        .filter((p) => !busca || contem(p.nome, busca) || contem(p.marca, busca) || contem(p.categoria, busca))
+        .filter((p) => !categoria || p.categoria === categoria)
+        .map(paraProduto).sort(porNome)),
+
+    listarDisponiveis: async () => leitura((db) =>
+      db.produtos.filter((p) => p.estoque > 0).map(paraProduto).sort(porNome)),
+
+    opcoes: async () => ({ categorias: CATEGORIAS, condicoes: CONDICOES }),
+
+    criar: async (dados) => transacao((db) => {
+      const registro = { id: novoId(db, "produtos"), ...validarProduto(dados) };
+      db.produtos.push(registro);
+      return paraProduto(registro);
+    }),
+
+    atualizar: async (id, dados) => transacao((db) => {
+      const atual = db.produtos.find((p) => p.id === Number(id));
+      if (!atual) throw new Error("Produto não encontrado.");
+      Object.assign(atual, validarProduto(dados));
+      return paraProduto(atual);
+    }),
+
+    excluir: async (id) => transacao((db) => {
+      id = Number(id);
+      // Regra do FOREIGN KEY ... RESTRICT: peça com pedidos fica no histórico
+      if (db.pedidos.some((p) => p.produto_id === id))
+        throw new Error("Não é possível excluir: o produto possui pedidos registrados.");
+      if (!db.produtos.some((p) => p.id === id)) throw new Error("Produto não encontrado.");
+      db.produtos = db.produtos.filter((p) => p.id !== id);
+      return null;
+    }),
+  },
+
+  clientes: {
+    listar: async (busca = "") => leitura((db) =>
+      db.clientes
+        .filter((c) => !busca || contem(c.nome, busca) || contem(c.email, busca) || contem(c.cidade, busca))
+        .sort(porNome)),
+
+    criar: async (dados) => transacao((db) => {
+      const registro = validarCliente(dados);
+      // regra UNIQUE do e-mail, verificada "na mão"
+      if (db.clientes.some((c) => c.email === registro.email))
+        throw new Error("Já existe um cliente com este e-mail.");
+      const novo = { id: novoId(db, "clientes"), ...registro };
+      db.clientes.push(novo);
+      return novo;
+    }),
+
+    atualizar: async (id, dados) => transacao((db) => {
+      id = Number(id);
+      const atual = db.clientes.find((c) => c.id === id);
+      if (!atual) throw new Error("Cliente não encontrado.");
+      const registro = validarCliente(dados);
+      if (db.clientes.some((c) => c.email === registro.email && c.id !== id))
+        throw new Error("Já existe um cliente com este e-mail.");
+      Object.assign(atual, registro);
+      return atual;
+    }),
+
+    excluir: async (id) => transacao((db) => {
+      id = Number(id);
+      if (db.pedidos.some((p) => p.cliente_id === id))
+        throw new Error("Não é possível excluir: o cliente possui pedidos registrados.");
+      if (!db.clientes.some((c) => c.id === id)) throw new Error("Cliente não encontrado.");
+      db.clientes = db.clientes.filter((c) => c.id !== id);
+      return null;
+    }),
+  },
+
+  pedidos: {
+    listar: async (status = "") => leitura((db) => {
+      if (status && !STATUS_FILTRO[status])
+        throw new Error("Status inválido. Use: pendentes, vencidos, pagos ou cancelados.");
+      return db.pedidos
+        .map((r) => paraPedido(db, r))
+        .filter((p) => !status || STATUS_FILTRO[status].includes(p.status))
+        // mais recentes primeiro (data e, em empate, o id maior)
+        .sort((a, b) => (b.data_pedido.localeCompare(a.data_pedido)) || (b.id - a.id));
+    }),
+
+    /*
+      Regra principal: fazer o pedido baixa o estoque. Tudo dentro de UMA
+      transacao(): se faltar estoque, o throw desfaz tudo e nada é gravado.
+    */
+    registrar: async ({ cliente_id, produto_id, quantidade = 1, dias = 2 }) => transacao((db) => {
+      if (!Number.isInteger(dias) || dias < 1 || dias > 15)
+        throw new Error("O prazo de pagamento deve ser de 1 a 15 dias.");
+      if (!Number.isInteger(quantidade) || quantidade < 1)
+        throw new Error("A quantidade deve ser um número inteiro maior que zero.");
+      if (!db.clientes.some((c) => c.id === cliente_id)) throw new Error("Cliente não encontrado.");
+      const produto = db.produtos.find((p) => p.id === produto_id);
+      if (!produto) throw new Error("Produto não encontrado.");
+      if (quantidade > produto.estoque)
+        throw new Error(`Estoque insuficiente: restam ${produto.estoque} unidade(s) de '${produto.nome}'.`);
+
+      produto.estoque -= quantidade;
+      const pedido = {
+        id: novoId(db, "pedidos"), cliente_id, produto_id, quantidade,
+        // "retrato" do preço no dia da compra: mudar o preço depois não altera o pedido
+        valor_total_centavos: produto.preco_centavos * quantidade,
+        data_pedido: hojeISO(), data_limite: hojeISO(dias),
+        data_pagamento: null, data_cancelamento: null,
+      };
+      db.pedidos.push(pedido);
+      return paraPedido(db, pedido);
+    }),
+
+    pagar: async (id) => transacao((db) => {
+      const pedido = db.pedidos.find((p) => p.id === Number(id));
+      if (!pedido) throw new Error("Pedido não encontrado.");
+      if (pedido.data_cancelamento) throw new Error("Este pedido foi cancelado e não pode ser pago.");
+      if (pedido.data_pagamento) throw new Error("Este pedido já foi pago.");
+      pedido.data_pagamento = hojeISO();
+      return paraPedido(db, pedido);
+    }),
+
+    /* Cancelar mexe em DUAS coisas juntas: o pedido e o estoque da peça. */
+    cancelar: async (id) => transacao((db) => {
+      const pedido = db.pedidos.find((p) => p.id === Number(id));
+      if (!pedido) throw new Error("Pedido não encontrado.");
+      if (pedido.data_pagamento) throw new Error("Pedido já pago não pode ser cancelado.");
+      if (pedido.data_cancelamento) throw new Error("Este pedido já foi cancelado.");
+      pedido.data_cancelamento = hojeISO();
+      db.produtos.find((p) => p.id === pedido.produto_id).estoque += pedido.quantidade;
+      return paraPedido(db, pedido);
+    }),
+  },
+};
+
+</script>
+  <script>
+/* ===== js/ui.js ===== */
+/*
+  ui.js — pequenas ferramentas de interface usadas por todas as telas.
+*/
+
+/*
+  escapar(): converte caracteres especiais do HTML em texto inofensivo.
+  POR QUÊ: montamos linhas da tabela com innerHTML. Se alguém cadastrar um
+  cliente chamado <script>alert(1)<\/script>, sem escapar o navegador EXECUTARIA
+  esse código (ataque XSS). Escapando, ele aparece apenas como texto.
+  Regra: todo dado vindo da API e colocado em innerHTML passa por escapar().
+*/
+function escapar(valor) {
+  return String(valor ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+/* A API devolve datas como "2026-11-11"; aqui mostramos "11/11/2026". */
+function formatarData(iso) {
+  if (!iso) return "–";
+  const [ano, mes, dia] = iso.split("-");
+  return `${dia}/${mes}/${ano}`;
+}
+
+/*
+  Intl.NumberFormat formata números conforme o idioma/moeda:
+  49.9 vira "R$ 49,90". Criamos o formatador uma vez e reaproveitamos.
+*/
+const formatadorReal = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+function formatarMoeda(valor) {
+  return formatadorReal.format(valor);
+}
+
+/* Telefone guardado como "11987654321" -> mostrado como "(11) 98765-4321". */
+function formatarTelefone(digitos) {
+  const t = String(digitos ?? "");
+  if (t.length === 11) return `(${t.slice(0, 2)}) ${t.slice(2, 7)}-${t.slice(7)}`;
+  if (t.length === 10) return `(${t.slice(0, 2)}) ${t.slice(2, 6)}-${t.slice(6)}`;
+  return t;
+}
+
+/* Mostra uma mensagem no topo e a esconde sozinha depois de 4 segundos. */
+let _temporizadorAviso;
+function mostrarAviso(texto, tipo = "ok") {
+  const caixa = document.getElementById("aviso");
+  caixa.textContent = texto;        // textContent (não innerHTML): já é seguro
+  caixa.className = `aviso ${tipo}`; // "ok" ou "erro" -> cor definida no CSS
+  caixa.hidden = false;
+  clearTimeout(_temporizadorAviso);
+  _temporizadorAviso = setTimeout(() => (caixa.hidden = true), 4000);
+}
+
+/* Atalho para tratar erros vindos da API (as exceções lançadas em api.js). */
+function mostrarErro(erro) {
+  mostrarAviso(erro.message, "erro");
+}
+
+/*
+  FormData lê todos os campos de um <form> pelo atributo "name".
+  Object.fromEntries transforma isso em um objeto simples: {nome: "...", ...}
+*/
+function lerFormulario(form) {
+  return Object.fromEntries(new FormData(form).entries());
+}
+
+/*
+  Os campos <input> sempre devolvem TEXTO ("3"). A API espera número para
+  alguns campos, então convertemos. Campo vazio vira null.
+*/
+function paraNumero(valor) {
+  return valor === "" || valor === undefined ? null : Number(valor);
+}
+
+/* Fecha o diálogo ao clicar em qualquer botão com o atributo data-fechar. */
+document.addEventListener("click", (evento) => {
+  if (evento.target.matches("[data-fechar]")) {
+    evento.target.closest("dialog").close();
+  }
+});
+
+/*
+  debounce: espera o usuário parar de digitar por 300 ms antes de buscar.
+  Sem isso, cada tecla dispararia uma requisição ao servidor.
+*/
+function debounce(funcao, atraso = 300) {
+  let temporizador;
+  return (...args) => {
+    clearTimeout(temporizador);
+    temporizador = setTimeout(() => funcao(...args), atraso);
+  };
+}
+
+</script>
+  <script>
+/* ===== js/produtos.js ===== */
+/*
+  produtos.js — tela de Produtos: listar, buscar, filtrar, cadastrar, editar
+  e excluir. Padrão usado nas três telas:  carregar -> desenhar -> reagir.
+*/
+
+const tabelaProdutos = document.getElementById("tabela-produtos");
+const dialogoProduto = document.getElementById("dialogo-produto");
+const formProduto = document.getElementById("form-produto");
+const filtroCategoria = document.getElementById("filtro-categoria");
+
+/* Guarda os produtos carregados para o botão "Editar" achar os dados pelo id
+   sem precisar perguntar ao servidor de novo. */
+let produtosCarregados = [];
+
+/*
+  As listas de categorias e condições vêm do SERVIDOR (/produtos/opcoes),
+  assim o front nunca fica diferente do que o back aceita.
+  Preenche o filtro e os <select> do formulário uma única vez.
+*/
+async function carregarOpcoesProduto() {
+  try {
+    const { categorias, condicoes } = await api.produtos.opcoes();
+    const opcoes = (lista) => lista.map((o) => `<option>${escapar(o)}</option>`).join("");
+    filtroCategoria.insertAdjacentHTML("beforeend", opcoes(categorias));
+    formProduto.elements.categoria.innerHTML = opcoes(categorias);
+    formProduto.elements.condicao.innerHTML = opcoes(condicoes);
+  } catch (erro) {
+    mostrarErro(erro);
+  }
+}
+
+/* 1) CARREGAR: pede a lista ao servidor e manda desenhar. */
+async function carregarProdutos() {
+  try {
+    const busca = document.getElementById("busca-produtos").value;
+    produtosCarregados = await api.produtos.listar(busca, filtroCategoria.value);
+    desenharProdutos();
+  } catch (erro) {
+    mostrarErro(erro);
+  }
+}
+
+/* 2) DESENHAR: transforma o array de produtos em linhas <tr> da tabela. */
+function desenharProdutos() {
+  if (produtosCarregados.length === 0) {
+    // Estado vazio: orienta o usuário sobre o que fazer
+    tabelaProdutos.innerHTML =
+      `<tr><td colspan="7" class="vazio">Nenhum produto encontrado. Cadastre o primeiro com o botão acima.</td></tr>`;
+    return;
+  }
+
+  // .map cria um texto HTML para cada produto; .join une tudo em um só texto
+  tabelaProdutos.innerHTML = produtosCarregados.map((p) => `
+    <tr>
+      <td>
+        <strong>${escapar(p.nome)}</strong>
+        ${p.marca ? `<small>${escapar(p.marca)}</small>` : ""}
+      </td>
+      <td>${escapar(p.categoria)}</td>
+      <td>${escapar(p.tamanho)}</td>
+      <td>${escapar(p.condicao)}</td>
+      <td>${formatarMoeda(p.preco)}</td>
+      <td>
+        <!-- classe "sim"/"nao" muda a cor da etiqueta (ver style.css) -->
+        <span class="etiqueta ${p.disponivel ? "sim" : "nao"}">
+          ${p.disponivel ? `${p.estoque} em estoque` : "Esgotado"}
+        </span>
+      </td>
+      <td class="acoes-linha">
+        <!-- data-id guarda o id do produto para o clique saber qual é -->
+        <button class="botao pequeno" data-acao="editar" data-id="${p.id}">Editar</button>
+        <button class="botao pequeno perigo" data-acao="excluir" data-id="${p.id}">Excluir</button>
+      </td>
+    </tr>`).join("");
+}
+
+/*
+  EVENT DELEGATION: em vez de colocar um "onclick" em cada botão (que são
+  recriados a cada desenho), colocamos UM ouvinte na tabela. O clique "sobe"
+  dos botões até ela, e descobrimos qual botão foi usando data-acao e data-id.
+*/
+tabelaProdutos.addEventListener("click", async (evento) => {
+  const botao = evento.target.closest("button[data-acao]");
+  if (!botao) return;
+  const id = Number(botao.dataset.id);
+
+  if (botao.dataset.acao === "editar") {
+    abrirFormularioProduto(produtosCarregados.find((p) => p.id === id));
+  } else if (botao.dataset.acao === "excluir") {
+    // confirm() mostra "OK/Cancelar" antes de uma ação irreversível
+    if (!confirm("Excluir este produto?")) return;
+    try {
+      await api.produtos.excluir(id);
+      mostrarAviso("Produto excluído.");
+      await recarregarTudo();
+    } catch (erro) {
+      // Ex.: 409 quando o produto tem pedidos registrados
+      mostrarErro(erro);
+    }
+  }
+});
+
+/* Abre o diálogo: vazio para cadastrar, preenchido para editar. */
+function abrirFormularioProduto(produto = null) {
+  formProduto.reset();
+  document.getElementById("titulo-dialogo-produto").textContent =
+    produto ? "Editar produto" : "Cadastrar produto";
+  if (produto) {
+    const f = formProduto.elements;
+    f.id.value = produto.id;
+    f.nome.value = produto.nome;
+    f.marca.value = produto.marca ?? "";
+    f.categoria.value = produto.categoria;
+    f.tamanho.value = produto.tamanho;
+    f.condicao.value = produto.condicao;
+    f.preco.value = produto.preco;
+    f.estoque.value = produto.estoque;
+  }
+  dialogoProduto.showModal();
+}
+
+/* 3) SALVAR: POST (id vazio) ou PUT (id preenchido). */
+formProduto.addEventListener("submit", async (evento) => {
+  evento.preventDefault(); // impede o navegador de recarregar a página
+  const dados = lerFormulario(formProduto);
+  const id = dados.id;
+  delete dados.id; // o id vai na URL, não no corpo
+  dados.preco = paraNumero(dados.preco);
+  dados.estoque = paraNumero(dados.estoque);
+
+  try {
+    if (id) {
+      await api.produtos.atualizar(id, dados);
+      mostrarAviso("Produto atualizado.");
+    } else {
+      await api.produtos.criar(dados);
+      mostrarAviso("Produto cadastrado.");
+    }
+    dialogoProduto.close();
+    await recarregarTudo();
+  } catch (erro) {
+    mostrarErro(erro); // o diálogo continua aberto para o usuário corrigir
+  }
+});
+
+document.getElementById("novo-produto").addEventListener("click", () => abrirFormularioProduto());
+document.getElementById("busca-produtos").addEventListener("input", debounce(carregarProdutos));
+filtroCategoria.addEventListener("change", carregarProdutos);
+
+</script>
+  <script>
+/* ===== js/clientes.js ===== */
+/*
+  clientes.js — tela de Clientes. Mesma estrutura de produtos.js:
+  carregar -> desenhar -> reagir a cliques / envio do formulário.
+*/
+
+const tabelaClientes = document.getElementById("tabela-clientes");
+const dialogoCliente = document.getElementById("dialogo-cliente");
+const formCliente = document.getElementById("form-cliente");
+let clientesCarregados = [];
+
+async function carregarClientes() {
+  try {
+    const busca = document.getElementById("busca-clientes").value;
+    clientesCarregados = await api.clientes.listar(busca);
+    desenharClientes();
+  } catch (erro) {
+    mostrarErro(erro);
+  }
+}
+
+function desenharClientes() {
+  if (clientesCarregados.length === 0) {
+    tabelaClientes.innerHTML =
+      `<tr><td colspan="5" class="vazio">Nenhum cliente encontrado. Cadastre o primeiro com o botão acima.</td></tr>`;
+    return;
+  }
+  tabelaClientes.innerHTML = clientesCarregados.map((c) => `
+    <tr>
+      <td><strong>${escapar(c.nome)}</strong></td>
+      <td>${escapar(c.email)}</td>
+      <td>${escapar(formatarTelefone(c.telefone))}</td>
+      <td>${escapar(c.cidade)}</td>
+      <td class="acoes-linha">
+        <button class="botao pequeno" data-acao="editar" data-id="${c.id}">Editar</button>
+        <button class="botao pequeno perigo" data-acao="excluir" data-id="${c.id}">Excluir</button>
+      </td>
+    </tr>`).join("");
+}
+
+// Event delegation (explicado em produtos.js)
+tabelaClientes.addEventListener("click", async (evento) => {
+  const botao = evento.target.closest("button[data-acao]");
+  if (!botao) return;
+  const id = Number(botao.dataset.id);
+
+  if (botao.dataset.acao === "editar") {
+    abrirFormularioCliente(clientesCarregados.find((c) => c.id === id));
+  } else if (botao.dataset.acao === "excluir") {
+    if (!confirm("Excluir este cliente?")) return;
+    try {
+      await api.clientes.excluir(id);
+      mostrarAviso("Cliente excluído.");
+      await recarregarTudo();
+    } catch (erro) {
+      mostrarErro(erro); // ex.: 409 cliente com pedidos
+    }
+  }
+});
+
+function abrirFormularioCliente(cliente = null) {
+  formCliente.reset();
+  document.getElementById("titulo-dialogo-cliente").textContent =
+    cliente ? "Editar cliente" : "Cadastrar cliente";
+  if (cliente) {
+    formCliente.elements.id.value = cliente.id;
+    formCliente.elements.nome.value = cliente.nome;
+    formCliente.elements.email.value = cliente.email;
+    formCliente.elements.telefone.value = formatarTelefone(cliente.telefone);
+    formCliente.elements.cidade.value = cliente.cidade;
+  }
+  dialogoCliente.showModal();
+}
+
+formCliente.addEventListener("submit", async (evento) => {
+  evento.preventDefault();
+  const dados = lerFormulario(formCliente);
+  const id = dados.id;
+  delete dados.id;
+
+  try {
+    if (id) {
+      await api.clientes.atualizar(id, dados);
+      mostrarAviso("Cliente atualizado.");
+    } else {
+      await api.clientes.criar(dados);
+      mostrarAviso("Cliente cadastrado.");
+    }
+    dialogoCliente.close();
+    await recarregarTudo();
+  } catch (erro) {
+    mostrarErro(erro); // ex.: 409 e-mail repetido
+  }
+});
+
+document.getElementById("novo-cliente").addEventListener("click", () => abrirFormularioCliente());
+document.getElementById("busca-clientes").addEventListener("input", debounce(carregarClientes));
+
+</script>
+  <script>
+/* ===== js/pedidos.js ===== */
+/*
+  pedidos.js — tela de Pedidos: listar com filtro, fazer, pagar e cancelar.
+  É a tela que usa a regra de negócio principal do sistema (controle de estoque).
+*/
+
+const tabelaPedidos = document.getElementById("tabela-pedidos");
+const dialogoPedido = document.getElementById("dialogo-pedido");
+const formPedido = document.getElementById("form-pedido");
+const filtroStatus = document.getElementById("filtro-status");
+
+/* Guarda os produtos oferecidos no formulário para limitar a quantidade. */
+let produtosDoPedido = [];
+
+async function carregarPedidos() {
+  try {
+    // O filtro (pendentes/vencidos/pagos/cancelados) é feito pelo servidor
+    // via query string
+    const lista = await api.pedidos.listar(filtroStatus.value);
+    desenharPedidos(lista);
+  } catch (erro) {
+    mostrarErro(erro);
+  }
+}
+
+function desenharPedidos(lista) {
+  if (lista.length === 0) {
+    tabelaPedidos.innerHTML =
+      `<tr><td colspan="7" class="vazio">Nenhum pedido nesta visão.</td></tr>`;
+    return;
+  }
+  tabelaPedidos.innerHTML = lista.map((p) => {
+    // Só pedidos "em aberto" (pendente ou vencido) têm botões de ação
+    const emAberto = p.status === "pendente" || p.status === "vencido";
+    return `
+    <tr>
+      <td><strong>${escapar(p.produto_nome)}</strong></td>
+      <td>${escapar(p.cliente_nome)}</td>
+      <td>${p.quantidade}</td>
+      <td>${formatarMoeda(p.valor_total)}</td>
+      <td>${formatarData(p.data_limite)}</td>
+      <td>
+        <!-- p.status é pendente/vencido/pago/cancelado: vira classe CSS -->
+        <span class="etiqueta ${p.status}">${p.status}</span>
+        ${p.data_pagamento ? `<small>em ${formatarData(p.data_pagamento)}</small>` : ""}
+        ${p.data_cancelamento ? `<small>em ${formatarData(p.data_cancelamento)}</small>` : ""}
+      </td>
+      <td class="acoes-linha">
+        ${emAberto ? `
+          <button class="botao pequeno primario" data-acao="pagar" data-id="${p.id}">Confirmar pagamento</button>
+          <button class="botao pequeno perigo" data-acao="cancelar" data-id="${p.id}">Cancelar</button>` : ""}
+      </td>
+    </tr>`;
+  }).join("");
+}
+
+tabelaPedidos.addEventListener("click", async (evento) => {
+  const botao = evento.target.closest("button[data-acao]");
+  if (!botao) return;
+  const id = botao.dataset.id;
+  try {
+    if (botao.dataset.acao === "pagar") {
+      await api.pedidos.pagar(id);
+      mostrarAviso("Pagamento confirmado.");
+    } else {
+      if (!confirm("Cancelar este pedido? A peça volta para o estoque.")) return;
+      await api.pedidos.cancelar(id);
+      mostrarAviso("Pedido cancelado.");
+    }
+    await recarregarTudo();   // o estoque mudou, então recarrega tudo
+  } catch (erro) {
+    mostrarErro(erro);
+  }
+});
+
+/*
+  Abre o formulário preenchendo os <select> com dados atuais da API.
+  Promise.all dispara as duas requisições ao mesmo tempo (mais rápido que
+  uma depois da outra) e espera as duas terminarem.
+  Só produtos com estoque são oferecidos (?disponiveis=1).
+*/
+async function abrirFormularioPedido() {
+  try {
+    const [clientes, produtos] = await Promise.all([
+      api.clientes.listar(),
+      api.produtos.listarDisponiveis(),
+    ]);
+
+    if (clientes.length === 0 || produtos.length === 0) {
+      mostrarAviso("Cadastre ao menos um cliente e tenha um produto em estoque.", "erro");
+      return;
+    }
+
+    produtosDoPedido = produtos;
+    formPedido.reset();
+    formPedido.elements.cliente_id.innerHTML = clientes.map(
+      (c) => `<option value="${c.id}">${escapar(c.nome)} (${escapar(c.cidade)})</option>`).join("");
+    formPedido.elements.produto_id.innerHTML = produtos.map(
+      (p) => `<option value="${p.id}">${escapar(p.nome)} (${escapar(p.tamanho)}) — ${formatarMoeda(p.preco)}</option>`).join("");
+    limitarQuantidade();
+    dialogoPedido.showModal();
+  } catch (erro) {
+    mostrarErro(erro);
+  }
+}
+
+/* Limita o campo "quantidade" ao estoque da peça escolhida (conforto de uso;
+   a regra de verdade continua no servidor). */
+function limitarQuantidade() {
+  const produto = produtosDoPedido.find(
+    (p) => p.id === Number(formPedido.elements.produto_id.value));
+  formPedido.elements.quantidade.max = produto ? produto.estoque : 1;
+  formPedido.elements.quantidade.value = 1;
+}
+formPedido.elements.produto_id.addEventListener("change", limitarQuantidade);
+
+formPedido.addEventListener("submit", async (evento) => {
+  evento.preventDefault();
+  const dados = lerFormulario(formPedido);
+  try {
+    // A API exige números inteiros (se mandasse "1" como texto, daria 400)
+    await api.pedidos.registrar({
+      cliente_id: Number(dados.cliente_id),
+      produto_id: Number(dados.produto_id),
+      quantidade: Number(dados.quantidade),
+      dias: Number(dados.dias),
+    });
+    dialogoPedido.close();
+    mostrarAviso("Pedido registrado.");
+    await recarregarTudo();
+  } catch (erro) {
+    mostrarErro(erro); // ex.: 409 estoque insuficiente
+  }
+});
+
+document.getElementById("novo-pedido").addEventListener("click", abrirFormularioPedido);
+filtroStatus.addEventListener("change", carregarPedidos);
+
+</script>
+  <script>
+/* ===== js/app.js ===== */
+/*
+  app.js — "maestro" do front-end: troca de abas, resumo lateral e
+  carregamento inicial. É o último script carregado.
+*/
+
+const abas = document.querySelectorAll(".aba");
+const telas = document.querySelectorAll(".tela");
+
+/* Mostra só a tela escolhida e marca o botão do menu como ativo. */
+function abrirAba(nome) {
+  telas.forEach((t) => (t.hidden = t.id !== `aba-${nome}`));
+  abas.forEach((b) => b.classList.toggle("ativa", b.dataset.aba === nome));
+}
+
+abas.forEach((botao) =>
+  botao.addEventListener("click", () => abrirAba(botao.dataset.aba)));
+
+/*
+  Números do menu lateral. Reaproveitamos as rotas que já existem:
+  somamos/contamos as listas devolvidas pela API.
+*/
+async function atualizarResumo() {
+  try {
+    const [produtos, pendentes, pagos] = await Promise.all([
+      api.produtos.listar(),
+      api.pedidos.listar("pendentes"),
+      api.pedidos.listar("pagos"),
+    ]);
+    // reduce: percorre a lista acumulando um total
+    document.getElementById("resumo-estoque").textContent =
+      produtos.reduce((soma, p) => soma + p.estoque, 0);
+    // "pendentes" já inclui os vencidos (vencido = pendente + prazo passado)
+    document.getElementById("resumo-pendentes").textContent = pendentes.length;
+    // Faturamento = soma só dos pedidos PAGOS (pendente ainda não é dinheiro)
+    document.getElementById("resumo-faturamento").textContent =
+      formatarMoeda(pagos.reduce((soma, p) => soma + p.valor_total, 0));
+  } catch (erro) {
+    mostrarErro(erro);
+  }
+}
+
+/*
+  Depois de qualquer alteração (cadastro, exclusão, pedido, pagamento)
+  recarregamos as três listas e o resumo, para a tela nunca ficar
+  desatualizada em relação aos dados. As telas chamam esta função.
+*/
+async function recarregarTudo() {
+  await Promise.all([
+    carregarProdutos(),
+    carregarClientes(),
+    carregarPedidos(),
+    atualizarResumo(),
+  ]);
+}
+
+/* Só na versão demo: apaga os dados do navegador e volta aos exemplos. */
+document.getElementById("restaurar").addEventListener("click", async () => {
+  if (!confirm("Apagar os dados deste navegador e voltar aos exemplos?")) return;
+  restaurarDadosDeExemplo();
+  mostrarAviso("Dados de exemplo restaurados.");
+  await recarregarTudo();
+});
+
+// Ao abrir a página: carrega as opções dos selects e depois os dados.
+carregarOpcoesProduto();
+recarregarTudo();
+
+</script>
+</body>
+</html>
