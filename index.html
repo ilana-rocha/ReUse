@@ -13,6 +13,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>ReUse — Brechó online</title>
   <link rel="stylesheet" href="css/style.css">
+</head>
 <body>
 
   <!-- ===== Menu lateral: navegação entre as telas + resumo da loja ===== -->
@@ -25,6 +26,11 @@
       <button class="aba" data-aba="clientes">Clientes</button>
       <button class="aba" data-aba="pedidos">Pedidos</button>
     </nav>
+
+    <!-- Resumo: os números são calculados em app.js a partir da API -->
+    <!-- Aviso: esta é a versão publicada no GitHub Pages (sem servidor) -->
+    <p class="demo">Versão demonstração: os dados ficam só neste navegador.
+      <button type="button" id="restaurar" class="botao pequeno">Restaurar exemplos</button></p>
 
     <dl class="resumo">
       <div><dt>Peças em estoque</dt><dd id="resumo-estoque">–</dd></div>
@@ -174,12 +180,11 @@
     Ordem dos scripts IMPORTA: scripts comuns compartilham o mesmo escopo
     global, então api.js e ui.js precisam vir antes de quem os usa.
   -->
-
-  <script src="js/api.js"></script>
-  <script src="js/ui.js"></script>
-  <script src="js/produtos.js"></script>
-  <script src="js/clientes.js"></script>
-  <script src="js/pedidos.js"></script>
-  <script src="js/app.js"></script>
+  <script src="js/api.js" defer></script>
+  <script src="js/ui.js" defer></script>
+  <script src="js/produtos.js" defer></script>
+  <script src="js/clientes.js" defer></script>
+  <script src="js/pedidos.js" defer></script>
+  <script src="js/app.js" defer></script>
 </body>
 </html>
