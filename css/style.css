@@ -1,31 +1,31 @@
+
 /*
-  style.css — Tema ReUse (brechó): verde-sálvia, creme e terracota.
-  As cores ficam em variáveis (:root) para trocar o tema mexendo só aqui.
+  style.css — Tema ReUse: rosa pastel, branco e rosé.
 */
 
 :root {
-  --tinta: #5f7a61;          /* verde-sálvia (menu) */
-  --tinta-clara: #44604a;
-  --papel: #faf6ee;          /* creme (fundo) */
+  --tinta: #d99aaa;
+  --tinta-clara: #b87589;
+  --papel: #fff7f9;
   --superficie: #ffffff;
-  --linha: #e8e0d0;
-  --texto: #38342d;
-  --texto-suave: #7d7667;
+  --linha: #f0dce2;
+  --texto: #49383e;
+  --texto-suave: #967e86;
 
-  --destaque: #c7714f;       /* terracota (botão principal) */
-  --destaque-hover: #b0603f;
+  --destaque: #d88fa5;
+  --destaque-hover: #c47790;
 
-  --verde: #3f7a52;
-  --verde-fundo: #e1f0e5;
+  --verde: #56866b;
+  --verde-fundo: #e5f3e9;
 
-  --vermelho: #b5503f;
-  --vermelho-fundo: #f8e3de;
+  --vermelho: #bd6578;
+  --vermelho-fundo: #fae6eb;
 
-  --azul: #5d7d9a;
-  --azul-fundo: #e6eef5;
+  --azul: #788eae;
+  --azul-fundo: #eaf0fa;
 
-  --cinza: #7d7667;
-  --cinza-fundo: #eeeae0;
+  --cinza: #897b82;
+  --cinza-fundo: #f1e9ed;
 
   --serifa: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -66,14 +66,14 @@ body {
   margin: 0;
 }
 
-.marca span { color: #f3c9a8; }
+.marca span { color: #ffe2e9; }
 
 .marca small {
   display: block;
   font: 400 .8rem var(--sans);
   letter-spacing: .12em;
   text-transform: uppercase;
-  color: #dfe9df;
+  color: #fff0f3;
   margin: 4px 0 0;
 }
 
@@ -86,7 +86,7 @@ body {
 .aba {
   text-align: left;
   font: inherit;
-  color: #eaf1ea;
+  color: #fff5f7;
   background: none;
   border: 0;
   border-left: 4px solid transparent;
@@ -97,13 +97,13 @@ body {
 }
 
 .aba:hover {
-  background: rgba(255,255,255,.13);
+  background: rgba(255,255,255,.16);
   color: #fff;
 }
 
 .aba.ativa {
-  border-left-color: #f3c9a8;
-  background: rgba(255,255,255,.18);
+  border-left-color: #ffe2e9;
+  background: rgba(255,255,255,.22);
   color: #fff;
   font-weight: 600;
 }
@@ -115,13 +115,13 @@ body {
 }
 
 .resumo div {
-  border-top: 1px solid rgba(255,255,255,.22);
+  border-top: 1px solid rgba(255,255,255,.25);
   padding-top: 10px;
 }
 
 .resumo dt {
   font-size: .85rem;
-  color: #dfe9df;
+  color: #fff0f3;
 }
 
 .resumo dd {
@@ -164,7 +164,7 @@ h2 {
   border: 1px solid var(--linha);
   border-radius: 12px;
   overflow-x: auto;
-  box-shadow: 0 3px 12px rgba(80,70,40,.06);
+  box-shadow: 0 3px 12px rgba(180,110,135,.07);
 }
 
 table {
@@ -183,7 +183,7 @@ th {
   font-size: .85rem;
   font-weight: 600;
   color: var(--tinta-clara);
-  background: #f4f0e4;
+  background: #fff0f4;
 }
 
 tbody tr:last-child td {
@@ -191,7 +191,7 @@ tbody tr:last-child td {
 }
 
 tbody tr:hover {
-  background: #fdfaf3;
+  background: #fff8fa;
 }
 
 .vazio {
@@ -258,7 +258,7 @@ small {
 
 .botao:hover {
   border-color: var(--tinta);
-  background: #f7f3e8;
+  background: #fff0f4;
 }
 
 .botao.primario {
@@ -293,7 +293,7 @@ input, select {
 input:focus, select:focus {
   border-color: var(--destaque);
   outline: none;
-  box-shadow: 0 0 0 3px rgba(199,113,79,.18);
+  box-shadow: 0 0 0 3px rgba(216,143,165,.20);
 }
 
 input[type="search"] {
@@ -316,7 +316,7 @@ input[type="search"] {
   border-radius: 10px;
   font-weight: 600;
   max-width: 360px;
-  box-shadow: 0 4px 16px rgba(50,40,20,.18);
+  box-shadow: 0 4px 16px rgba(100,60,75,.15);
 }
 
 .aviso.ok {
@@ -340,11 +340,11 @@ dialog {
   width: min(480px, 92vw);
   background: var(--superficie);
   color: var(--texto);
-  box-shadow: 0 10px 40px rgba(50,40,20,.18);
+  box-shadow: 0 10px 40px rgba(100,60,75,.15);
 }
 
 dialog::backdrop {
-  background: rgba(56,52,45,.45);
+  background: rgba(73,56,62,.40);
 }
 
 dialog h3 {
@@ -409,7 +409,7 @@ dialog select {
   }
 
   .aba.ativa {
-    border-bottom-color: #f3c9a8;
+    border-bottom-color: #ffe2e9;
   }
 
   .resumo {
@@ -421,3 +421,4 @@ dialog select {
     font-size: 1.2rem;
   }
 }
+
