@@ -1,23 +1,3 @@
-/*
-  api.js — VERSÃO PARA GITHUB PAGES (sem servidor).
-
-  O GitHub Pages só entrega arquivos estáticos: não executa Python. Por isso,
-  neste arquivo, o "back-end" foi reescrito em JavaScript e roda DENTRO do
-  navegador, guardando os dados no localStorage.
-
-  As telas (produtos.js, clientes.js, pedidos.js) continuam idênticas às da
-  versão com Flask: elas chamam api.produtos.listar(), api.pedidos.pagar() etc.
-  e nem sabem que não existe servidor. Este arquivo cumpre o mesmo "contrato"
-  da API real e repete as MESMAS regras de negócio do Python (backend/models
-  e backend/dao):
-
-      Python (Flask)                      JavaScript (aqui)
-      ------------------------------      -----------------------------
-      armazenamento.transacao()           transacao()
-      models/validacao.py                 funções "validar..." abaixo
-      dao/*.py + models/*.py              objeto "api" (regras de estoque)
-      raise ErroConflito(...)             throw new Error(...)
-*/
 
 const CHAVE = "reuse-db-v1";   // nome sob o qual os dados ficam no navegador
 
